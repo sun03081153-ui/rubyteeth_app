@@ -132,6 +132,7 @@
 
         // 這裡已經換成你專屬的 Render 伺服器網址了！
         const API_URL = "https://rubyteeth1-app.onrender.com";
+        let currentUser = "";
 
         // 假登入功能：把登入畫面藏起來，顯示任務畫面
         function fakeLogin() {
@@ -140,7 +141,7 @@
                 alert("請輸入乖寶寶代號喔！");
                 return;
             }
-            
+            currentUser = user; // ✅ 把名字存起來
             // 把名字寫在設定頁面上
             document.getElementById("currentUserText").innerText = user;
             
@@ -181,7 +182,7 @@
         // 把原本 window.onload 裡面的東西，變成一個獨立的功能
         async function fetchPoints() {
             try {
-                let response = await fetch(API_URL + "/points");
+                let response = await fetch(API_URL + "/points?username=" + currentUser);
                 let data = await response.json();
                 document.getElementById("pointDisplay").innerText = data.points;
             } catch(e) {
@@ -192,7 +193,7 @@
         // 按下打卡按鈕要做的事】
         async function brushTeeth() {
             // 1. 派出 fetch 服務生，去後端的 /brush 窗口，並指定用 "POST" (提交資料) 的方式打卡
-            let response = await fetch(API_URL + "/brush", { method: "POST" });
+            let response = await fetch(API_URL + "/brush?username="+ currentUser,   { method: "POST" });
             let data = await response.json();
             
             // 2. 拿到打卡後的最新點數，再次更新畫面
