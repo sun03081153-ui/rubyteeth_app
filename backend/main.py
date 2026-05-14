@@ -91,4 +91,4 @@ def brush_teeth(username: str):
     conn.commit()
     conn.close()
     
-    return {"message": f"{username} 打卡成功！", "points": new_points}
+    return {"message": f"{username} 真是個超級乖寶寶！", "points": new_points}
