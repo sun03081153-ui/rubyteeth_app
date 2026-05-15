@@ -66,14 +66,16 @@ def init_db():
 
     conn.commit()
     conn.close()
+
 init_db()
 
-# 任務清單（可以之後再加）
+# 任務清單
 TASKS = {
     "brush":   {"name": "刷牙 🪥",  "points": 1},
     "exercise":{"name": "運動 🏃",  "points": 2},
     "sleep":   {"name": "早睡 🌙",  "points": 1},
 }
+
 # 商店清單
 SHOP_ITEMS = {
     "snack":   {"name": "零食 🍬",    "cost": 5},
@@ -98,7 +100,6 @@ def get_points(username: str):
 
 @app.get("/water")
 def get_water(username: str):
-    """查詢今天喝水量"""
     conn = get_conn()
     cursor = conn.cursor()
     today = date.today()
@@ -114,7 +115,6 @@ def get_water(username: str):
 
 @app.post("/water")
 def add_water(username: str, ml: int):
-    """新增這次喝水量"""
     if ml <= 0:
         raise HTTPException(status_code=400, detail="請輸入正確的水量")
 
@@ -122,7 +122,6 @@ def add_water(username: str, ml: int):
     cursor = conn.cursor()
     today = date.today()
 
-    # 查今天紀錄
     cursor.execute(
         "SELECT total_ml, milestone_1000, milestone_3000 FROM water_logs WHERE username = %s AND log_date = %s",
         (username, today)
@@ -130,7 +129,6 @@ def add_water(username: str, ml: int):
     result = cursor.fetchone()
 
     if result is None:
-        # 今天第一次喝水，建立紀錄
         cursor.execute(
             "INSERT INTO water_logs (username, log_date, total_ml) VALUES (%s, %s, %s)",
             (username, today, ml)
@@ -149,7 +147,6 @@ def add_water(username: str, ml: int):
     earned = 0
     messages = []
 
-    # 檢查 1000ml 里程碑
     if not m1000 and new_ml >= 1000:
         earned += 1
         messages.append("+1點 🎉 喝水達1000ml！")
@@ -158,7 +155,6 @@ def add_water(username: str, ml: int):
             (username, today)
         )
 
-    # 檢查 3000ml 里程碑
     if not m3000 and new_ml >= 3000:
         earned += 2
         messages.append("+2點 🏆 達標3000ml！")
@@ -167,7 +163,6 @@ def add_water(username: str, ml: int):
             (username, today)
         )
 
-    # 加點數
     if earned > 0:
         cursor.execute(
             "INSERT INTO users (username, points) VALUES (%s, %s) ON CONFLICT (username) DO UPDATE SET points = users.points + %s",
@@ -190,7 +185,6 @@ def add_water(username: str, ml: int):
 
 @app.get("/tasks")
 def get_tasks(username: str):
-    """回傳今天每個任務是否已完成"""
     conn = get_conn()
     cursor = conn.cursor()
     today = date.today()
@@ -220,7 +214,6 @@ def complete_task(task_id: str, username: str):
     cursor = conn.cursor()
     today = date.today()
 
-    # 檢查今天是否已打卡
     cursor.execute(
         "SELECT 1 FROM daily_tasks WHERE username = %s AND task_id = %s AND done_date = %s",
         (username, task_id, today)
@@ -229,13 +222,11 @@ def complete_task(task_id: str, username: str):
         conn.close()
         raise HTTPException(status_code=400, detail="今天已經完成這個任務了！")
 
-    # 寫入打卡紀錄
     cursor.execute(
         "INSERT INTO daily_tasks (username, task_id, done_date) VALUES (%s, %s, %s)",
         (username, task_id, today)
     )
 
-    # 加點數
     earned = TASKS[task_id]["points"]
     cursor.execute(
         "INSERT INTO users (username, points) VALUES (%s, %s) ON CONFLICT (username) DO UPDATE SET points = users.points + %s",
@@ -243,8 +234,6 @@ def complete_task(task_id: str, username: str):
     )
 
     conn.commit()
-
-    # 回傳最新點數
     cursor.execute("SELECT points FROM users WHERE username = %s", (username,))
     new_points = cursor.fetchone()[0]
     conn.close()
@@ -260,20 +249,16 @@ def redeem_item(item_id: str, username: str):
     conn = get_conn()
     cursor = conn.cursor()
 
-    # 檢查點數夠不夠
     cursor.execute("SELECT points FROM users WHERE username = %s", (username,))
     result = cursor.fetchone()
     if result is None or result[0] < item["cost"]:
         conn.close()
         raise HTTPException(status_code=400, detail="點數不足！")
 
-    # 扣點數
     cursor.execute(
         "UPDATE users SET points = points - %s WHERE username = %s",
         (item["cost"], username)
     )
-
-    # 寫入兌換紀錄
     cursor.execute(
         "INSERT INTO shop_logs (username, item_id, cost) VALUES (%s, %s, %s)",
         (username, item_id, item["cost"])
