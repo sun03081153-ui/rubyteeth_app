@@ -20,16 +20,6 @@ def get_conn():
     return psycopg2.connect(DATABASE_URL)
 
 def init_db():
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS water_logs (
-        username TEXT,
-        log_date DATE,
-        total_ml INTEGER DEFAULT 0,
-        milestone_1000 BOOLEAN DEFAULT FALSE,
-        milestone_3000 BOOLEAN DEFAULT FALSE,
-        PRIMARY KEY (username, log_date)
-    )
-''')
     conn = get_conn()
     cursor = conn.cursor()
 
@@ -37,6 +27,46 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
+            points INTEGER DEFAULT 0
+        )
+    ''')
+
+    # 每日任務打卡表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS daily_tasks (
+            username TEXT,
+            task_id TEXT,
+            done_date DATE,
+            PRIMARY KEY (username, task_id, done_date)
+        )
+    ''')
+
+    # 商店兌換紀錄表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS shop_logs (
+            id SERIAL PRIMARY KEY,
+            username TEXT,
+            item_id TEXT,
+            cost INTEGER,
+            redeemed_at TIMESTAMP DEFAULT NOW()
+        )
+    ''')
+
+    # 喝水紀錄表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS water_logs (
+            username TEXT,
+            log_date DATE,
+            total_ml INTEGER DEFAULT 0,
+            milestone_1000 BOOLEAN DEFAULT FALSE,
+            milestone_3000 BOOLEAN DEFAULT FALSE,
+            PRIMARY KEY (username, log_date)
+        )
+    ''')
+
+    conn.commit()
+    conn.close()
+            username TEXT PRIMARY KEY,  
             points INTEGER DEFAULT 0
         )
     ''')
