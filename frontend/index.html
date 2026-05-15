@@ -321,6 +321,7 @@
 }
 
 function renderWaterCard(total_ml) {
+    total_ml = total_ml || 0; // 如果是 undefined 就當 0
     // 如果喝水卡片已存在就更新，不存在就插入到任務列表最上面
     let existing = document.getElementById("water-card");
     const percent = Math.min((total_ml / 3000) * 100, 100);
