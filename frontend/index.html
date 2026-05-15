@@ -380,16 +380,17 @@ async function addWater() {
         let res = await fetch(API_URL + "/water?username=" + currentUser + "&ml=" + ml, { method: "POST" });
         let data = await res.json();
 
-        updatePoints(data.points);
-        renderWaterCard(data.total_ml);
         input.value = "";
-
         if (data.message) alert(data.message);
+
+        // 重新載入所有任務（包含喝水卡片）
+        await fetchPoints();
+        await fetchTasks();
+
     } catch(e) {
         alert("連線失敗，請再試一次！");
     }
 }
-
     async function completeTask(taskId) {
         const btn = document.getElementById("btn-" + taskId);
         btn.disabled = true;
