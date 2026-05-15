@@ -289,7 +289,8 @@
         container.innerHTML = "";
 
         for (const [taskId, info] of Object.entries(tasks)) {
-            const isDone = info.done;
+    if (!info.name || !info.points) continue; // 防呆，跳過壞資料
+    const isDone = info.done;
             container.innerHTML += `
                 <div class="task-card">
                     <div class="task-left">
