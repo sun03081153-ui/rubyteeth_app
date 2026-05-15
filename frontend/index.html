@@ -192,17 +192,26 @@
 
         // 按下打卡按鈕要做的事】
         async function brushTeeth() {
-            // 1. 派出 fetch 服務生，去後端的 /brush 窗口，並指定用 "POST" (提交資料) 的方式打卡
-            let response = await fetch(API_URL + "/brush?username="+ currentUser,   { method: "POST" });
-            let data = await response.json();
-            
-            // 2. 拿到打卡後的最新點數，再次更新畫面
-            document.getElementById("pointDisplay").innerText = data.points;
-            
-            // 3. 跳出一個系統小視窗，顯示後端傳來的 "你真是超級乖寶寶！" 訊息
-            alert(data.message); 
-        }
-
+    const btn = document.querySelector("button[onclick='brushTeeth()']");
+    
+    // 按下去就鎖住按鈕，防止重複點擊
+    btn.disabled = true;
+    btn.innerText = "連線中⏳";
+    
+    try {
+        let response = await fetch(API_URL + "/brush?username=" + currentUser, { method: "POST" });
+        let data = await response.json();
+        
+        document.getElementById("pointDisplay").innerText = data.points;
+        alert(data.message);
+    } catch(e) {
+        alert("連線失敗，請再試一次！");
+    } finally {
+        // 不管成功或失敗，最後都把按鈕解鎖
+        btn.disabled = false;
+        btn.innerText = "我刷好牙了！🪥";
+    }
+}
     </script>
 </body>
 </html>
